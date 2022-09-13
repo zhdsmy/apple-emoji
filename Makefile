@@ -13,7 +13,8 @@
 # limitations under the License.
 
 EMOJI = AppleColorEmoji
-font: $(EMOJI).ttf
+EMOJI_WINDOWS = AppleColorEmoji_WindowsCompatible
+font: $(EMOJI).ttf $(EMOJI_WINDOWS).ttf
 
 CFLAGS = -std=c99 -Wall -Wextra `pkg-config --cflags --libs cairo`
 LDFLAGS = -lm `pkg-config --libs cairo`
@@ -132,8 +133,11 @@ endif
 # ...
 # Run make without -j if this happens.
 
-%.ttx: %.ttx.tmpl $(ADD_GLYPHS) $(ALL_COMPRESSED_FILES)
+$(EMOJI).tmpl.ttx: $(EMOJI).tmpl.ttx.tmpl $(ADD_GLYPHS) $(ALL_COMPRESSED_FILES)
 	@$(PYTHON) $(ADD_GLYPHS) -f "$<" -o "$@" -d "$(COMPRESSED_DIR)" $(ADD_GLYPHS_FLAGS)
+
+$(EMOJI_WINDOWS).tmpl.ttx: $(EMOJI).tmpl.ttx.tmpl $(ADD_GLYPHS) $(ALL_COMPRESSED_FILES)
+	$(PYTHON) $(ADD_GLYPHS) --add_cmap4 --add_glyf -f "$<" -o "$@" -d "$(COMPRESSED_DIR)" $(ADD_GLYPHS_FLAGS)
 
 %.ttf: %.ttx
 	@rm -f "$@"
@@ -147,12 +151,20 @@ $(EMOJI).ttf: $(EMOJI).tmpl.ttf $(EMOJI_BUILDER) $(PUA_ADDER) \
 	@mv "$@-with-pua-varsel" "$@"
 	@rm "$@-with-pua"
 
+$(EMOJI_WINDOWS).ttf: $(EMOJI_WINDOWS).tmpl.ttf $(EMOJI_BUILDER) $(PUA_ADDER) \
+	$(ALL_COMPRESSED_FILES) | check_vs_adder
+	@$(PYTHON) $(EMOJI_BUILDER) -O $(SMALL_METRICS) -V $< "$@" "$(COMPRESSED_DIR)/emoji_u"
+	@$(PYTHON) $(PUA_ADDER) "$@" "$@-with-pua"
+	@$(VS_ADDER) -vs 2640 2642 2695 --dstdir '.' -o "$@-with-pua-varsel" "$@-with-pua"
+	@mv "$@-with-pua-varsel" "$@"
+	@rm "$@-with-pua"
+
 install:
 	mkdir -p $(PREFIX)/share/fonts
 	cp -f $(EMOJI).ttf $(PREFIX)/share/fonts/
 
 clean:
-	rm -f $(EMOJI).ttf $(EMOJI).tmpl.ttf $(EMOJI).tmpl.ttx
+	rm -f $(EMOJI).ttf $(EMOJI_WINDOWS).ttf $(EMOJI).tmpl.ttf $(EMOJI_WINDOWS).tmpl.ttf $(EMOJI).tmpl.ttx $(EMOJI_WINDOWS).tmpl.ttx
 	rm -rf $(BUILD_DIR)
 
 .SECONDARY: $(EMOJI_FILES) $(ALL_QUANTIZED_FILES) $(ALL_COMPRESSED_FILES)
