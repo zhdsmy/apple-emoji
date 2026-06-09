@@ -1,5 +1,9 @@
 ![AppleColorEmojiLinux](https://repository-images.githubusercontent.com/158348890/44a361ad-d9f3-4b7b-8b57-fd3198ec9952)
 
+# Archived
+
+This fork is archived because the upstream project now includes the corresponding Windows-compatible font capability. Please use the upstream repository for future updates.
+
 # Apple Color Emoji for Linux
 
 Welcome to the world of colorful emojis on your Linux system! 🌈 This project brings Apple's vibrant emojis to your Linux experience.
